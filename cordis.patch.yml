@@ -7,3 +7,7 @@
       name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/configurable-greet.ts'
       config:
         greeting: 'Hi'
+    - id: practice-workspace-name-service
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-name-service.ts'
+    - id: practice-workspace-name-tool
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-name-tool.ts'
