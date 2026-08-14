@@ -11,3 +11,7 @@
       name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-name-service.ts'
     - id: practice-workspace-name-tool
       name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-name-tool.ts'
+    - id: practice-workspace-event-listener
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-event-listener.ts'
+    - id: practice-workspace-event-emitter
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-event-emitter.ts'
