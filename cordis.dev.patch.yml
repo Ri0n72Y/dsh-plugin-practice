@@ -1,0 +1,17 @@
+- insert:
+    - id: practice-lifecycle
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/plugin.ts'
+    - id: practice-workspace-info
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-info.ts'
+    - id: practice-configurable-greet
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/configurable-greet.ts'
+      config:
+        greeting: 'Hi'
+    - id: practice-workspace-name-service
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-name-service.ts'
+    - id: practice-workspace-name-tool
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-name-tool.ts'
+    - id: practice-workspace-event-emitter
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-event-emitter.ts'
+    - id: practice-workspace-event-listener
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-event-listener.ts'

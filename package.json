@@ -26,7 +26,8 @@
     "lib/**/*.js",
     "cordis.patch.yml",
     "scripts/deploy.mjs",
-    "README.md"
+    "README.md",
+    "LICENSE"
   ],
   "bin": {
     "dsh-plugin-practice": "./scripts/deploy.mjs"
@@ -41,7 +42,7 @@
     "typecheck": "tsc --noEmit",
     "check": "pnpm run typecheck && pnpm run build",
     "prepare": "tsdown --config tsdown.config.ts",
-    "pack:plugin": "npm pack --ignore-scripts --pack-destination .dsh-pack",
+    "pack:plugin": "node ./scripts/deploy.mjs --pack-only",
     "deploy": "node ./scripts/deploy.mjs"
   },
   "peerDependencies": {
