@@ -1,3 +1,5 @@
 - insert:
     - id: practice-lifecycle
       name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/plugin.ts'
+    - id: practice-workspace-info
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-info.ts'
