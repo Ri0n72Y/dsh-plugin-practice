@@ -37,7 +37,8 @@
     "build": "tsdown --config tsdown.config.ts",
     "typecheck": "tsc --noEmit",
     "check": "pnpm run typecheck && pnpm run build",
-    "prepare": "tsdown --config tsdown.config.ts"
+    "prepare": "tsdown --config tsdown.config.ts",
+    "deploy": "pnpm run prepare && dsh plugin --profile practice add ."
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",

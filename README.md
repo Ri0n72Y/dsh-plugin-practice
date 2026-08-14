@@ -40,9 +40,9 @@ dsh --help
 
 确认 CLI 可用。
 
-## 本地构建并安装
+## 本地开发与一键部署
 
-克隆仓库：
+克隆仓库并安装依赖：
 
 ```sh
 git clone https://github.com/Ri0n72Y/dsh-plugin-practice.git
@@ -50,31 +50,61 @@ cd dsh-plugin-practice
 pnpm install
 ```
 
-检查并构建：
+日常开发完成后，直接执行：
 
 ```sh
-pnpm run check
+pnpm deploy
 ```
 
-然后直接使用 DSH 官方插件管理命令安装当前 checkout：
+`deploy` 在 `package.json` 中定义为：
+
+```json
+{
+  "scripts": {
+    "deploy": "pnpm run prepare && dsh plugin --profile practice add ."
+  }
+}
+```
+
+因此一条命令会完成：
+
+```text
+src/*.ts
+→ pnpm run prepare
+→ tsdown 构建 lib/*.js
+→ dsh plugin --profile practice add .
+→ 当前 checkout 安装 / 更新进 practice profile
+```
+
+写完一课代码后，通常只需要：
+
+```sh
+pnpm deploy
+```
+
+然后启动 DSH：
+
+```sh
+dsh --profile practice
+```
+
+如果想先检查最终组合配置：
+
+```sh
+dsh --profile practice --dump-config
+```
+
+默认开发 profile 目前固定为 `practice`；需要修改时直接调整 `package.json` 中的 `deploy` script。
+
+## 直接使用 DSH 官方命令安装
+
+`pnpm deploy` 只是把构建和官方安装命令串起来。真正负责插件安装和 profile 管理的仍然是 DSH：
 
 ```sh
 dsh plugin --profile practice add .
 ```
 
 `dsh plugin` 会负责初始化 / 更新 profile，并把声明了 `dsh.bundle` 的当前包加入 profile 的 bundle 列表。
-
-检查最终组合配置：
-
-```sh
-dsh --profile practice --dump-config
-```
-
-启动：
-
-```sh
-dsh --profile practice
-```
 
 ## 直接从 GitHub 安装
 
@@ -117,17 +147,17 @@ allowBuilds:
       name: 'dsh-plugin-practice/workspace-info'
 ```
 
-因此安装关系是：
+安装关系是：
 
 ```text
-dsh plugin add
+pnpm deploy
+→ prepare / build
+→ dsh plugin add .
 → package.json / dsh.bundle
 → cordis.patch.yml
 → dsh-plugin-practice/<subpath>
 → lib/*.js
 ```
-
-不需要额外的部署脚本。
 
 ## 源码开发 / overlay 模式
 
@@ -209,8 +239,8 @@ dsh plugin --profile practice remove dsh-plugin-practice
 pnpm run typecheck
 pnpm run build
 pnpm run check
+pnpm deploy
 
-dsh plugin --profile practice add .
 dsh --profile practice --dump-config
 dsh --profile practice
 ```
