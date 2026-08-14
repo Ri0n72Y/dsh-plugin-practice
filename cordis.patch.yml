@@ -3,3 +3,7 @@
       name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/plugin.ts'
     - id: practice-workspace-info
       name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-info.ts'
+    - id: practice-configurable-greet
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/configurable-greet.ts'
+      config:
+        greeting: 'Hi'
