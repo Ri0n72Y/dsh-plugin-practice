@@ -1,6 +1,6 @@
 # dsh-plugin-practice
 
-用于学习 DeepSeek Harness / Cordis 插件开发的最小练习仓库。代码按课程逐步累积，同时也可以作为一个真正的 DSH Bundle 构建、打包并安装到本机 profile。
+用于学习 DeepSeek Harness / Cordis 插件开发的最小练习仓库。代码按课程逐步累积，同时也可以作为一个标准 DSH Bundle 安装进 profile。
 
 当前内容覆盖：Plugin lifecycle、Tool、Config、Service / Consumer、Event。
 
@@ -17,8 +17,6 @@ dsh-plugin-practice/
 │   ├── workspace-event-contract.ts
 │   ├── workspace-event-emitter.ts
 │   └── workspace-event-listener.ts
-├── scripts/
-│   └── deploy.mjs
 ├── cordis.patch.yml
 ├── cordis.dev.patch.yml
 ├── package.json
@@ -26,9 +24,7 @@ dsh-plugin-practice/
 └── tsdown.config.ts
 ```
 
-`cordis.patch.yml` 是正式 Bundle 安装使用的 patch，里面通过 `dsh-plugin-practice/<subpath>` 加载构建产物。
-
-`cordis.dev.patch.yml` 是学习和本地源码调试使用的 overlay，直接指向 `.ts` 源文件。
+`cordis.patch.yml` 是正式 Bundle 使用的 patch；`cordis.dev.patch.yml` 用于直接加载本地 TypeScript 源码。
 
 ## 环境要求
 
@@ -36,11 +32,17 @@ dsh-plugin-practice/
 - pnpm（仓库声明 `pnpm@11.7.0`）
 - 本机已经安装可直接执行的 `dsh` CLI
 
-可以先运行 `dsh --help` 确认 CLI 可用。
+先运行：
 
-## 推荐方式：构建、打包、安装一条龙
+```sh
+dsh --help
+```
 
-克隆仓库并安装开发依赖：
+确认 CLI 可用。
+
+## 本地构建并安装
+
+克隆仓库：
 
 ```sh
 git clone https://github.com/Ri0n72Y/dsh-plugin-practice.git
@@ -48,55 +50,54 @@ cd dsh-plugin-practice
 pnpm install
 ```
 
-先做类型检查和构建：
+检查并构建：
 
 ```sh
 pnpm run check
 ```
 
-然后安装到 DSH profile。默认 profile 名为 `practice`：
+然后直接使用 DSH 官方插件管理命令安装当前 checkout：
 
 ```sh
-pnpm run deploy
+dsh plugin --profile practice add .
 ```
 
-也可以指定 profile：
+`dsh plugin` 会负责初始化 / 更新 profile，并把声明了 `dsh.bundle` 的当前包加入 profile 的 bundle 列表。
+
+检查最终组合配置：
 
 ```sh
-pnpm run deploy -- --profile demo
+dsh --profile practice --dump-config
 ```
 
-`deploy` 会依次完成：
-
-```text
-pnpm run build
-→ 生成 lib/*.js
-→ npm pack 生成预构建 .tgz
-→ dsh plugin --profile <profile> add <tarball>
-→ dsh --profile <profile> --dump-config
-```
-
-打包产物临时放在 `.dsh-pack/`，不会提交到 Git。
-
-安装成功后启动：
+启动：
 
 ```sh
 dsh --profile practice
 ```
 
-## 使用 npx 一条命令安装
+## 直接从 GitHub 安装
 
-如果希望直接从 GitHub 拉取源码、构建并安装，可以执行：
+DSH 官方也支持直接安装 Git 仓库：
 
 ```sh
-npx --yes --package=github:Ri0n72Y/dsh-plugin-practice dsh-plugin-practice --profile practice
+dsh plugin --profile practice add github:Ri0n72Y/dsh-plugin-practice
 ```
 
-这条命令会运行包的 `prepare` 构建脚本，然后调用同一个部署 CLI。Git 源安装会在本机执行仓库代码；只应对你信任的源码使用这种方式。需要固定版本时，可以在 GitHub package spec 后附 commit SHA。
+本仓库是 TypeScript 包，因此 `package.json` 提供了 `prepare`：Git 安装完成后由 pnpm 从 `src/` 构建 `lib/`。
 
-## Bundle 是如何安装的
+pnpm 10+ 默认会阻止 Git 依赖运行构建脚本。第一次安装如果 DSH / pnpm 提示需要授权，请按终端给出的包名在该 profile 的 `pnpm-workspace.yaml` 中加入 `allowBuilds`，然后重新执行安装。例如：
 
-`package.json` 声明：
+```yaml
+allowBuilds:
+  dsh-plugin-practice: true
+```
+
+只应对可信源码开放安装期构建权限。需要固定版本时，可以在 GitHub spec 后加 commit SHA。
+
+## Bundle manifest
+
+`package.json` 通过官方约定声明当前包是一个 DSH Bundle：
 
 ```json
 {
@@ -108,7 +109,7 @@ npx --yes --package=github:Ri0n72Y/dsh-plugin-practice dsh-plugin-practice --pro
 }
 ```
 
-构建后，`cordis.patch.yml` 中的插件行会从已安装包解析，例如：
+正式 patch 通过包导出路径加载构建后的插件：
 
 ```yaml
 - insert:
@@ -116,13 +117,23 @@ npx --yes --package=github:Ri0n72Y/dsh-plugin-practice dsh-plugin-practice --pro
       name: 'dsh-plugin-practice/workspace-info'
 ```
 
-这与开发模式下直接加载绝对路径 `.ts` 文件是两条独立路径。
+因此安装关系是：
+
+```text
+dsh plugin add
+→ package.json / dsh.bundle
+→ cordis.patch.yml
+→ dsh-plugin-practice/<subpath>
+→ lib/*.js
+```
+
+不需要额外的部署脚本。
 
 ## 源码开发 / overlay 模式
 
-如果要继续逐课修改源码并直接观察插件行为，可以使用 `cordis.dev.patch.yml`。
+如果继续逐课修改源码并希望直接加载 `.ts` 文件，可以使用 `cordis.dev.patch.yml`。
 
-先把文件中的：
+先把其中的：
 
 ```text
 /ABSOLUTE/PATH/TO/dsh-plugin-practice
@@ -134,7 +145,7 @@ npx --yes --package=github:Ri0n72Y/dsh-plugin-practice dsh-plugin-practice --pro
 dsh web --patch /ABSOLUTE/PATH/TO/dsh-plugin-practice/cordis.dev.patch.yml
 ```
 
-如果你是在 DeepSeek Harness 源码仓库中运行 CLI，也可以使用官方源码入口：
+如果从 DeepSeek Harness 源码仓库运行 CLI，也可以使用：
 
 ```sh
 pnpm dsh web --patch /ABSOLUTE/PATH/TO/dsh-plugin-practice/cordis.dev.patch.yml
@@ -149,8 +160,6 @@ pnpm dsh web --patch /ABSOLUTE/PATH/TO/dsh-plugin-practice/cordis.dev.patch.yml
 | 3 | `src/configurable-greet.ts` | `Config` interface、Schemastery、默认值、运行时配置校验 |
 | 4 | `src/workspace-name-service.ts` + `workspace-name-tool.ts` | Service Provider、Context declaration merging、Consumer / inject |
 | 5 | `workspace-event-*` | typed Events、`ctx.emit()`、`ctx.on()`、松耦合广播 |
-
-整体关系：
 
 ```mermaid
 flowchart LR
@@ -171,7 +180,7 @@ flowchart LR
 dsh --profile practice
 ```
 
-然后在 Agent 中分别测试：
+然后在 Agent 中测试：
 
 ```text
 Use the workspace_info tool and tell me the current workspace.
@@ -183,18 +192,10 @@ Use announce_workspace to announce the current workspace.
 预期行为：
 
 - `workspace_info` 返回当前 DSH Node 进程的 `cwd` 和目录名。
-- `configured_greet` 使用 Bundle 配置中的 `greeting: Hi`，例如返回 `Hi, Ada!`。
-- `workspace_name` 通过自定义 `ctx.workspaceName` Service 取得目录名。
+- `configured_greet` 使用 Bundle patch 中的 `greeting: Hi`，例如返回 `Hi, Ada!`。
+- `workspace_name` 通过自定义 `ctx.workspaceName` Service 获取目录名。
 - `announce_workspace` 发出 `practice/workspace-announced`，监听插件在终端输出 `[workspace-event] announced: <name>`。
 - Lesson 1 插件运行时每 5 秒输出一次 `[practice-lifecycle] heartbeat`；卸载时输出 `disposed`。
-
-也可以单独检查最终组合配置：
-
-```sh
-dsh --profile practice --dump-config
-```
-
-应能看到 `dsh-plugin-practice` Bundle 层以及本仓库定义的插件行。
 
 ## 卸载
 
@@ -202,20 +203,18 @@ dsh --profile practice --dump-config
 dsh plugin --profile practice remove dsh-plugin-practice
 ```
 
-卸载后，Cordis 会清理本 Bundle 注册的 Tool、Event listener 和其他 lifecycle effects。
-
 ## 常用开发命令
 
 ```sh
 pnpm run typecheck
 pnpm run build
 pnpm run check
-pnpm run pack:plugin
-pnpm run deploy -- --profile practice
-```
 
-`build` 使用 `tsdown` 将每个练习入口编译到 `lib/`；`prepare` 使用同一构建配置，因此 Git package 安装也能从源码生成运行时产物。
+dsh plugin --profile practice add .
+dsh --profile practice --dump-config
+dsh --profile practice
+```
 
 ## 版本说明
 
-这个练习仓库跟随 DeepSeek Harness 当前开发版本学习，DSH 仍处于快速迭代阶段。`package.json` 中 Cordis / DSH peer dependency 范围按当前官方仓库版本设置；如果未来 DSH 出现 breaking change，应先对照官方插件开发文档和实际 TypeScript 接口再升级依赖。
+这个练习仓库跟随 DeepSeek Harness 当前开发版本学习。DSH 仍处于快速迭代阶段；如果 API 发生 breaking change，应优先对照官方开发文档和当前 TypeScript 接口调整。

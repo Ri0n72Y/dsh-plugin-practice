@@ -25,13 +25,9 @@
   "files": [
     "lib/**/*.js",
     "cordis.patch.yml",
-    "scripts/deploy.mjs",
     "README.md",
     "LICENSE"
   ],
-  "bin": {
-    "dsh-plugin-practice": "./scripts/deploy.mjs"
-  },
   "dsh": {
     "bundle": {
       "patch": "./cordis.patch.yml"
@@ -41,9 +37,7 @@
     "build": "tsdown --config tsdown.config.ts",
     "typecheck": "tsc --noEmit",
     "check": "pnpm run typecheck && pnpm run build",
-    "prepare": "tsdown --config tsdown.config.ts",
-    "pack:plugin": "node ./scripts/deploy.mjs --pack-only",
-    "deploy": "node ./scripts/deploy.mjs"
+    "prepare": "tsdown --config tsdown.config.ts"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
