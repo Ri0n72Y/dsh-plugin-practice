@@ -2,7 +2,7 @@
 
 用于学习 DeepSeek Harness / Cordis 插件开发的最小练习仓库。代码按课程逐步累积，同时也可以作为一个标准 DSH Bundle 安装进 profile。
 
-当前内容覆盖：Plugin lifecycle、Tool、Config、Service / Consumer、Event。
+当前内容覆盖：Plugin lifecycle、Tool、Config、Service / Consumer、Event、waterfall middleware。
 
 ## 当前结构
 
@@ -16,7 +16,11 @@ dsh-plugin-practice/
 │   ├── workspace-name-tool.ts
 │   ├── workspace-event-contract.ts
 │   ├── workspace-event-emitter.ts
-│   └── workspace-event-listener.ts
+│   ├── workspace-event-listener.ts
+│   ├── workspace-transform-contract.ts
+│   ├── workspace-transform-uppercase.ts
+│   ├── workspace-transform-block.ts
+│   └── workspace-transform-tool.ts
 ├── cordis.patch.yml
 ├── cordis.dev.patch.yml
 ├── package.json
@@ -76,12 +80,6 @@ src/*.ts
 → 当前 checkout 安装 / 更新进 practice profile
 ```
 
-写完一课代码后，通常只需要：
-
-```sh
-pnpm deploy
-```
-
 然后启动 DSH：
 
 ```sh
@@ -94,7 +92,7 @@ dsh --profile practice
 dsh --profile practice --dump-config
 ```
 
-默认开发 profile 目前固定为 `practice`；需要修改时直接调整 `package.json` 中的 `deploy` script。
+默认开发 profile 固定为 `practice`；需要修改时直接调整 `package.json` 中的 `deploy` script。
 
 ## 直接使用 DSH 官方命令安装
 
@@ -104,26 +102,13 @@ dsh --profile practice --dump-config
 dsh plugin --profile practice add .
 ```
 
-`dsh plugin` 会负责初始化 / 更新 profile，并把声明了 `dsh.bundle` 的当前包加入 profile 的 bundle 列表。
-
-## 直接从 GitHub 安装
-
-DSH 官方也支持直接安装 Git 仓库：
+DSH 也支持直接安装 Git 仓库：
 
 ```sh
 dsh plugin --profile practice add github:Ri0n72Y/dsh-plugin-practice
 ```
 
-本仓库是 TypeScript 包，因此 `package.json` 提供了 `prepare`：Git 安装完成后由 pnpm 从 `src/` 构建 `lib/`。
-
-pnpm 10+ 默认会阻止 Git 依赖运行构建脚本。第一次安装如果 DSH / pnpm 提示需要授权，请按终端给出的包名在该 profile 的 `pnpm-workspace.yaml` 中加入 `allowBuilds`，然后重新执行安装。例如：
-
-```yaml
-allowBuilds:
-  dsh-plugin-practice: true
-```
-
-只应对可信源码开放安装期构建权限。需要固定版本时，可以在 GitHub spec 后加 commit SHA。
+本仓库是 TypeScript 包，因此 `package.json` 提供了 `prepare`，供 Git 安装后从 `src/` 构建 `lib/`。pnpm 10+ 第一次安装 Git 依赖时可能要求在 profile 的 `pnpm-workspace.yaml` 中通过 `allowBuilds` 授权构建脚本。
 
 ## Bundle manifest
 
@@ -161,7 +146,7 @@ pnpm deploy
 
 ## 源码开发 / overlay 模式
 
-如果继续逐课修改源码并希望直接加载 `.ts` 文件，可以使用 `cordis.dev.patch.yml`。
+如果希望直接加载 `.ts` 文件，可以使用 `cordis.dev.patch.yml`。
 
 先把其中的：
 
@@ -175,7 +160,7 @@ pnpm deploy
 dsh web --patch /ABSOLUTE/PATH/TO/dsh-plugin-practice/cordis.dev.patch.yml
 ```
 
-如果从 DeepSeek Harness 源码仓库运行 CLI，也可以使用：
+如果从 DeepSeek Harness 源码仓库运行 CLI：
 
 ```sh
 pnpm dsh web --patch /ABSOLUTE/PATH/TO/dsh-plugin-practice/cordis.dev.patch.yml
@@ -190,6 +175,7 @@ pnpm dsh web --patch /ABSOLUTE/PATH/TO/dsh-plugin-practice/cordis.dev.patch.yml
 | 3 | `src/configurable-greet.ts` | `Config` interface、Schemastery、默认值、运行时配置校验 |
 | 4 | `src/workspace-name-service.ts` + `workspace-name-tool.ts` | Service Provider、Context declaration merging、Consumer / inject |
 | 5 | `workspace-event-*` | typed Events、`ctx.emit()`、`ctx.on()`、松耦合广播 |
+| 6 | `workspace-transform-*` | `ctx.waterfall()`、`next()`、around middleware、短路 |
 
 ```mermaid
 flowchart LR
@@ -199,14 +185,18 @@ flowchart LR
     Consumer --> Tool["Model-facing Tool"]
     Tool --> Event["Cordis Event"]
     Event --> Listener["Listener Plugin"]
+    Tool --> Waterfall["Waterfall"]
+    Waterfall --> MiddlewareA["Middleware A"]
+    MiddlewareA --> MiddlewareB["Middleware B"]
     Plugin --> Effect["Lifecycle Effects"]
 ```
 
 ## 安装后测试
 
-启动目标 profile：
+部署并启动：
 
 ```sh
+pnpm deploy
 dsh --profile practice
 ```
 
@@ -217,6 +207,8 @@ Use the workspace_info tool and tell me the current workspace.
 Use configured_greet to greet Ada.
 Use workspace_name and return only the workspace name.
 Use announce_workspace to announce the current workspace.
+Use waterfall_demo with input "hello".
+Use waterfall_demo with input "blocked words".
 ```
 
 预期行为：
@@ -225,6 +217,8 @@ Use announce_workspace to announce the current workspace.
 - `configured_greet` 使用 Bundle patch 中的 `greeting: Hi`，例如返回 `Hi, Ada!`。
 - `workspace_name` 通过自定义 `ctx.workspaceName` Service 获取目录名。
 - `announce_workspace` 发出 `practice/workspace-announced`，监听插件在终端输出 `[workspace-event] announced: <name>`。
+- `waterfall_demo("hello")` 经过 uppercase middleware 后返回 `HELLO`。
+- `waterfall_demo("blocked words")` 在 block middleware 中短路默认处理，再由外层 uppercase middleware 包装返回，最终得到 `** BLOCKED **`。
 - Lesson 1 插件运行时每 5 秒输出一次 `[practice-lifecycle] heartbeat`；卸载时输出 `disposed`。
 
 ## 卸载
