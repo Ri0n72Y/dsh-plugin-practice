@@ -19,6 +19,10 @@
     "./workspace-event-contract": "./lib/workspace-event-contract.js",
     "./workspace-event-emitter": "./lib/workspace-event-emitter.js",
     "./workspace-event-listener": "./lib/workspace-event-listener.js",
+    "./workspace-transform-contract": "./lib/workspace-transform-contract.js",
+    "./workspace-transform-uppercase": "./lib/workspace-transform-uppercase.js",
+    "./workspace-transform-block": "./lib/workspace-transform-block.js",
+    "./workspace-transform-tool": "./lib/workspace-transform-tool.js",
     "./cordis.patch.yml": "./cordis.patch.yml",
     "./package.json": "./package.json"
   },
