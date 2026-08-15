@@ -15,3 +15,9 @@
       name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-event-emitter.ts'
     - id: practice-workspace-event-listener
       name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-event-listener.ts'
+    - id: practice-workspace-transform-uppercase
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-transform-uppercase.ts'
+    - id: practice-workspace-transform-block
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-transform-block.ts'
+    - id: practice-workspace-transform-tool
+      name: '/ABSOLUTE/PATH/TO/dsh-plugin-practice/src/workspace-transform-tool.ts'
