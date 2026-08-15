@@ -15,3 +15,9 @@
       name: 'dsh-plugin-practice/workspace-event-listener'
     - id: practice-workspace-event-emitter
       name: 'dsh-plugin-practice/workspace-event-emitter'
+    - id: practice-workspace-transform-uppercase
+      name: 'dsh-plugin-practice/workspace-transform-uppercase'
+    - id: practice-workspace-transform-block
+      name: 'dsh-plugin-practice/workspace-transform-block'
+    - id: practice-workspace-transform-tool
+      name: 'dsh-plugin-practice/workspace-transform-tool'
